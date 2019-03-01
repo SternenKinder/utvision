@@ -35,7 +35,9 @@
 #include <algorithm>
 #include <boost/scoped_array.hpp>
 #include <boost/foreach.hpp>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/types_c.h>
+#include <opencv2/imgproc/imgproc_c.h>
 
 #include <iostream>
 
@@ -65,7 +67,7 @@ static log4cpp::Category& logger( log4cpp::Category::getInstance( "Ubitrack.Visi
 #include <utVision/EdgeMeasurement.h>
 #include <utAlgorithm/Function/ProjectivePoseNormalize.h>
 
-#include <opencv/highgui.h>
+#include <opencv2/highgui.hpp>
 //#define DO_TIMING
 
 #ifdef DO_TIMING

@@ -29,9 +29,11 @@
  * @author Daniel Pustka <daniel.pustka@in.tum.de>
  */
 
-#include <opencv/cv.h>
+#include <opencv2/core/types_c.h>
+#include <opencv2/core/core_c.h>
 #include <opencv2/opencv.hpp>
-#include <opencv2/imgcodecs/imgcodecs_c.h>
+#include <opencv2/imgproc/types_c.h>
+#include <opencv2/imgcodecs/legacy/constants_c.h>
 #include <utUtil/Exception.h>
 #include "Image.h"
 #include <log4cpp/Category.hh>
@@ -774,7 +776,7 @@ void Image::checkOnGPU()
         // how about being more explicit by specifiying:
 		// cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY
 		// cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY
-		m_gpuImage = m_cpuImage.getUMat(0);
+		m_gpuImage = m_cpuImage.getUMat(cv::ACCESS_RW);
 		m_uploadState = OnCPUGPU;
 	}
 }
@@ -785,7 +787,7 @@ void Image::checkOnCPU()
 #ifdef ENABLE_EVENT_TRACING
 		TRACEPOINT_VISION_GPU_DOWNLOAD(width()*height()*channels())
 #endif
-		m_cpuImage = m_gpuImage.getMat(0);
+		m_cpuImage = m_gpuImage.getMat(cv::ACCESS_RW);
 		m_uploadState = OnCPUGPU;
 	}
 }

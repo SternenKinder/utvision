@@ -34,7 +34,7 @@
 #define __UBITRACK_VISION_PIXELFLOW_H_INCLUDED__
 
 #include "Image.h"
-#include <opencv/cv.h>
+#include <opencv2/core/types_c.h>
 
 
 namespace Ubitrack { namespace Vision { 
