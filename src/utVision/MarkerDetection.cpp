@@ -36,6 +36,8 @@
 #include <boost/scoped_array.hpp>
 #include <boost/foreach.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core/types_c.h>
+#include <opencv2/imgproc/imgproc_c.h>
 
 #include <iostream>
 
@@ -65,7 +67,7 @@ static log4cpp::Category& logger( log4cpp::Category::getInstance( "Ubitrack.Visi
 #include <utVision/EdgeMeasurement.h>
 #include <utAlgorithm/Function/ProjectivePoseNormalize.h>
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/highgui.hpp>
 //#define DO_TIMING
 
 #ifdef DO_TIMING
@@ -737,13 +739,14 @@ MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset)
 	CvSeq* pContours = cvCreateSeq( CV_SEQ_ELTYPE_POINT, sizeof( CvSeq ), sizeof( CvPoint ), pStorage );
 
 	// Find all contours.
-	cv::findContours(img.Mat(), pStorage, &pContours,
-		cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE, offset );
+	IplImage cvimg = img.Mat();
+	cvFindContours( &cvimg, pStorage, &pContours, sizeof( CvContour ),
+		CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, offset );
 
 	// approximate all contours by polygons and check size and corner number
 	for ( CvSeq* pContour = pContours; pContour; pContour = pContour->h_next ) 
 	{
-		CvRect boundingRect = cv::boundingRect( pContour );
+		CvRect boundingRect = cvBoundingRect( pContour );
 		
 		const float fDiameter = sqrtf( static_cast< float >( boundingRect.height * boundingRect.height + boundingRect.width * boundingRect.width ) );
 		
@@ -765,7 +768,8 @@ MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset)
 			continue;
 	
 		// approximate contour by few corners
-		CvSeq* pApproxChain = cv::approxPolyDP( pContour, pStorage, fDiameter * 0.03f + 2.0f, 0 );
+		CvSeq* pApproxChain = cvApproxPoly( pContour, sizeof( CvContour ), pStorage,
+			CV_POLY_APPROX_DP, fDiameter * 0.03f + 2.0f, 0 );
 
 		int nCorners = pApproxChain->total; // This is number point in contour
 
@@ -787,7 +791,8 @@ MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset)
 		}
 
 		if (pDbgImg) {
-			cv::drawContours(pDbgImg->Mat(), pApproxChain, cv::Scalar( 255, 0, 255), cv::Scalar( 255, 0, 255 ), -1);
+			IplImage dbgImg = pDbgImg->Mat();
+			cvDrawContours( &dbgImg, pApproxChain, CV_RGB ( 255, 0, 255), CV_RGB( 255, 0, 255 ), -1);
 		}
 
 		ret.push_back( rect );

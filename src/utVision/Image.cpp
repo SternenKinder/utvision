@@ -747,7 +747,7 @@ void Image::checkOnGPU()
         // how about being more explicit by specifiying:
 		// cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY
 		// cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY
-		m_gpuImage = m_cpuImage.getUMat(cv::ACCESS_READ);
+		m_gpuImage = m_cpuImage.getUMat(cv::ACCESS_RW);
 		m_uploadState = OnCPUGPU;
 	}
 }
@@ -758,7 +758,7 @@ void Image::checkOnCPU()
 #ifdef ENABLE_EVENT_TRACING
 		TRACEPOINT_VISION_GPU_DOWNLOAD(width()*height()*channels())
 #endif
-		m_cpuImage = m_gpuImage.getMat(cv::ACCESS_READ);
+		m_cpuImage = m_gpuImage.getMat(cv::ACCESS_RW);
 		m_uploadState = OnCPUGPU;
 	}
 }

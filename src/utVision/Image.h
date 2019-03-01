@@ -38,7 +38,7 @@
 #include <boost/utility.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/binary_object.hpp>
-
+#include <opencv2/core/types_c.h>
 #include <utVision.h>
 #include <utMeasurement/Measurement.h>
 
@@ -492,7 +492,7 @@ private:
 		if (isOnCPU()) {
 			ar & boost::serialization::make_binary_object(m_cpuImage.data, m_cpuImage.total() * m_cpuImage.elemSize());
 		} else if (isOnGPU()) {
-			cv::Mat tmp = m_gpuImage.getMat(cv::ACCESS_READ);
+			cv::Mat tmp = m_gpuImage.getMat(cv::ACCESS_FAST);
 			ar & boost::serialization::make_binary_object(tmp.data, tmp.total() * tmp.elemSize());
 		}
 	}
