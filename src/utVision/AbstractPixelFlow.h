@@ -32,7 +32,7 @@
 #ifndef __UBITRACK_VISION_ABSTRACTPIXELFLOW_H_INCLUDED__
 #define __UBITRACK_VISION_ABSTRACTPIXELFLOW_H_INCLUDED__
 
-#include <opencv2/core/types_c.h>
+#include <opencv/cv.h>
 
 namespace Ubitrack { namespace Vision {
 

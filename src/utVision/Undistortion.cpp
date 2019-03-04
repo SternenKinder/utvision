@@ -33,8 +33,7 @@
 #include "Undistortion.h"
 
 // OpenCV
-#include <opencv2/opencv.hpp>
-#include <opencv2/calib3d/calib3d_c.h>
+#include <opencv/cv.h>
 
 // Ubitrack
 #include "Image.h"
@@ -226,10 +225,7 @@ bool Undistortion::resetMapping( const int width, const int height, const intrin
 	// @todo should be upgraded to modern opencv
 	CvMat pX = m_pMapX->Mat();
 	CvMat pY = m_pMapY->Mat();
-
-  //OPENCV4_INCOMPATIBLE
-  assert("Not compatible to OpenCV 4.0.1");
-	//cvInitUndistortMap( cvIntrinsics, cvCoeffs, &pX, &pY );
+	cvInitUndistortMap( cvIntrinsics, cvCoeffs, &pX, &pY );
 	
 	// explicitly release the allocated memory
 	cvReleaseMat( &cvCoeffs );
