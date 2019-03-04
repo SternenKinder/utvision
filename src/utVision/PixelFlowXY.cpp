@@ -25,15 +25,15 @@ void PixelFlowXY::update(PixelFlowXY *other_flow)
 	updateFlow();	
 }
 
-void PixelFlowXY::update(IplImage* image)
+void PixelFlowXY::update(cv::Mat* image)
 {
 	updateWithoutFlow(image);
 	updateFlow();	
 }
 
-void PixelFlowXY::updateWithoutFlow(IplImage* image)
+void PixelFlowXY::updateWithoutFlow(cv::Mat* image)
 {
-	unsigned char* imageData = (unsigned char*) image->imageData;
+	unsigned char* imageData = (unsigned char*) image->data;
 
 	memset(sumx,0,width*sizeof(unsigned int));
 	memset(sumy,0,height*sizeof(unsigned int));

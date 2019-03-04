@@ -62,10 +62,10 @@ public:
 	PixelFlowXY(int width, int height, int maxShift);
 	~PixelFlowXY(void);
 
-	void update(IplImage* image);
+	void update(cv::Mat* image);
 	void update(PixelFlowXY *other_flow);
 
-	void updateWithoutFlow(IplImage* image);
+	void updateWithoutFlow(cv::Mat* image);
 	void updateWithoutFlow(PixelFlowXY *other_flow);
 	void updateFlow();
 	void updateFlow(const int startIndexX, const int startIndexY, const int maxShift);

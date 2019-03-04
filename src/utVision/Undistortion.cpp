@@ -33,7 +33,7 @@
 #include "Undistortion.h"
 
 // OpenCV
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 // Ubitrack
 #include "Image.h"
@@ -225,7 +225,7 @@ bool Undistortion::resetMapping( const int width, const int height, const intrin
 	// @todo should be upgraded to modern opencv
 	CvMat pX = m_pMapX->Mat();
 	CvMat pY = m_pMapY->Mat();
-	cvInitUndistortMap( cvIntrinsics, cvCoeffs, &pX, &pY );
+	cv::initUndistortRectifyMap( cvIntrinsics, cvCoeffs, &pX, &pY );
 	
 	// explicitly release the allocated memory
 	cvReleaseMat( &cvCoeffs );

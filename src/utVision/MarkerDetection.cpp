@@ -35,7 +35,7 @@
 #include <algorithm>
 #include <boost/scoped_array.hpp>
 #include <boost/foreach.hpp>
-#include <opencv/cv.h>
+#include <opencv2/opencv.hpp>
 
 #include <iostream>
 
@@ -65,7 +65,7 @@ static log4cpp::Category& logger( log4cpp::Category::getInstance( "Ubitrack.Visi
 #include <utVision/EdgeMeasurement.h>
 #include <utAlgorithm/Function/ProjectivePoseNormalize.h>
 
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 //#define DO_TIMING
 
 #ifdef DO_TIMING
@@ -301,10 +301,10 @@ void markerCalculations(CornerList &it, Image& img, Image* pDebugImg,MarkerInfoM
                     // Draw marker contours for found marker
                     if ( pDebugImg )
                     {
-						IplImage dbgImg = pDebugImg->Mat();
+						    
                         for ( size_t i = 0; i < it.size(); ++i) {
-                        cvCircle( &dbgImg, cvPoint( cvRound( it.at( i )(0) * 16 ), cvRound( it.at( i )(1) * 16 ) ),
-				            cvRound( pDebugImg->width() / 500.0 * 16 ), CV_RGB( 0, 255, 255 ), -1, CV_AA, 4 );
+                        cv::circle( pDebugImg->Mat(), cv::Point( cvRound( it.at( i )(0) * 16 ), cvRound( it.at( i )(1) * 16 ) ),
+				            cvRound( pDebugImg->width() / 500.0 * 16 ), CV_RGB( 0, 255, 255 ), -1, cv::LINE_AA, 4 );
                         }
                     }
                 }
@@ -330,10 +330,10 @@ void markerCalculations(CornerList &it, Image& img, Image* pDebugImg,MarkerInfoM
 
                     if ( pDebugImg )
                     {
-						IplImage dbgImg = pDebugImg->Mat();
+						
                         for ( size_t i = 0; i < it.size(); ++i) {
-                        cvCircle( &dbgImg, cvPoint( cvRound( it.at( i )(0) * 16 ), cvRound( it.at( i )(1) * 16 ) ),
-				            cvRound( pDebugImg->width() / 500.0 * 16 ), CV_RGB( 0, 255, 0 ), -1, CV_AA, 4 );
+                          cv::circle( pDebugImg->Mat(), cvPoint( cvRound( it.at( i )(0) * 16 ), cvRound( it.at( i )(1) * 16 ) ),
+				            cvRound( pDebugImg->width() / 500.0 * 16 ), CV_RGB( 0, 255, 0 ), -1, cv::LINE_AA, 4 );
                         }
                     }
 
@@ -664,15 +664,14 @@ bool checkRefinedMarker(const Math::Matrix< float, 3, 3 >& K, Math::Pose checkPo
 	{
 		int xStart = img.width() - 1 - ( pMarkerImg->height() * (iMarkerSize-1) );
 		int yStart = img.height() - 1 - ( pMarkerImg->height() * (iMarkerSize-1) );
-		IplImage dbgImg = pDebugImg->Mat();
 		for ( unsigned int x = 0; x < iMarkerSize; x++ )
 			for ( unsigned int y = 0; y < iMarkerSize; y++ )
 			{
 				unsigned c = ( (unsigned char*)pMarkerImg->Mat().data )[ y * pMarkerImg->Mat().step + x ];
-				cvRectangle( &dbgImg,
-					cvPoint( xStart + (iMarkerSize-1) * x, yStart + (iMarkerSize-1) * y ), 
-					cvPoint( xStart + (iMarkerSize-1) * (x+1), yStart + (iMarkerSize-1) * (y+1) ),
-					CV_RGB( (c*c)>>8, (c*c)>>8, c ), CV_FILLED );
+				cv::rectangle( pDebugImg->Mat(),
+					cv::Point( xStart + (iMarkerSize-1) * x, yStart + (iMarkerSize-1) * y ), 
+					cv::Point( xStart + (iMarkerSize-1) * (x+1), yStart + (iMarkerSize-1) * (y+1) ),
+					CV_RGB( (c*c)>>8, (c*c)>>8, c ), cv::FILLED );
 			}
 	}
 
@@ -738,14 +737,13 @@ MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset)
 	CvSeq* pContours = cvCreateSeq( CV_SEQ_ELTYPE_POINT, sizeof( CvSeq ), sizeof( CvPoint ), pStorage );
 
 	// Find all contours.
-	IplImage cvimg = img.Mat();
-	cvFindContours( &cvimg, pStorage, &pContours, sizeof( CvContour ),
-		CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, offset );
+	cv::findContours(img.Mat(), pStorage, &pContours,
+		cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE, offset );
 
 	// approximate all contours by polygons and check size and corner number
 	for ( CvSeq* pContour = pContours; pContour; pContour = pContour->h_next ) 
 	{
-		CvRect boundingRect = cvBoundingRect( pContour );
+		CvRect boundingRect = cv::boundingRect( pContour );
 		
 		const float fDiameter = sqrtf( static_cast< float >( boundingRect.height * boundingRect.height + boundingRect.width * boundingRect.width ) );
 		
@@ -767,8 +765,7 @@ MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset)
 			continue;
 	
 		// approximate contour by few corners
-		CvSeq* pApproxChain = cvApproxPoly( pContour, sizeof( CvContour ), pStorage,
-			CV_POLY_APPROX_DP, fDiameter * 0.03f + 2.0f, 0 );
+		CvSeq* pApproxChain = cv::approxPolyDP( pContour, pStorage, fDiameter * 0.03f + 2.0f, 0 );
 
 		int nCorners = pApproxChain->total; // This is number point in contour
 
@@ -790,8 +787,7 @@ MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset)
 		}
 
 		if (pDbgImg) {
-			IplImage dbgImg = pDbgImg->Mat();
-			cvDrawContours( &dbgImg, pApproxChain, CV_RGB ( 255, 0, 255), CV_RGB( 255, 0, 255 ), -1);
+			cv::drawContours(pDbgImg->Mat(), pApproxChain, cv::Scalar( 255, 0, 255), cv::Scalar( 255, 0, 255 ), -1);
 		}
 
 		ret.push_back( rect );
@@ -860,9 +856,8 @@ int refineLinePoints( CvPoint2D32f* pPoints, int* pStrengths, int nPoints, Image
 
 		// debugging
 		if ( pDebugImg ) {
-			IplImage dbgImg = pDebugImg->Mat();
-			cvCircle( &dbgImg, cvPoint( cvRound( pPoints[ iPoint ].x * 16 ), cvRound( pPoints[ iPoint ].y * 16 ) ),
-					  cvRound( pDebugImg->width() / 1600.0 * 16 ), nMax < g_nMinimalEdgeStrength ? CV_RGB( 255, 0, 0 ) : CV_RGB( 0, 255, 0 ), -1, CV_AA, 4 );
+			cv::circle(pDebugImg->Mat(), cv::Point( cvRound( pPoints[ iPoint ].x * 16 ), cvRound( pPoints[ iPoint ].y * 16 ) ),
+					  cvRound( pDebugImg->width() / 1600.0 * 16 ), nMax < g_nMinimalEdgeStrength ? Scalar( 255, 0, 0 ) : Scalar( 0, 255, 0 ), -1, cv::LINE_AA, 4 );
 		}
 	}
 
@@ -917,7 +912,7 @@ bool refineCorners( Image& img, CornerList& corners, Image* pDebugImg )
 		{
 			// TODO: here one could experiment with different fitting distances to make this more robust
 			CvMat mat = cvMat( 1, nPoints, CV_32FC2, points );
-			cvFitLine( &mat, CV_DIST_L2, 0, 0.01, 0.01, &lineParams[ 4 * i ] );
+			cv::fitLine( &mat, cv::DIST_L2, 0, 0.01, 0.01, &lineParams[ 4 * i ] );
 		}
 		else
 		{
@@ -930,10 +925,9 @@ bool refineCorners( Image& img, CornerList& corners, Image* pDebugImg )
 
 		// draw refined lines and corners into the image -- is rather annoying
 		if ( pDebugImg && false ) {
-			IplImage dbgImg = pDebugImg->Mat();
-			cvLine( &dbgImg,
-					cvPoint( cvRound( lineParams[ 4 * i + 2 ] + 100 * lineParams[ 4 * i + 0 ] ), cvRound( lineParams[ 4 * i + 3 ] + 100 * lineParams[ 4 * i + 1 ] ) ),
-					cvPoint( cvRound( lineParams[ 4 * i + 2 ] - 100 * lineParams[ 4 * i + 0 ] ), cvRound( lineParams[ 4 * i + 3 ] - 100 * lineParams[ 4 * i + 1 ] ) ),
+			cv::line(pDebugImg->Mat(),
+					cv::Point( cvRound( lineParams[ 4 * i + 2 ] + 100 * lineParams[ 4 * i + 0 ] ), cvRound( lineParams[ 4 * i + 3 ] + 100 * lineParams[ 4 * i + 1 ] ) ),
+					cv::Point( cvRound( lineParams[ 4 * i + 2 ] - 100 * lineParams[ 4 * i + 0 ] ), cvRound( lineParams[ 4 * i + 3 ] - 100 * lineParams[ 4 * i + 1 ] ) ),
 					CV_RGB( 0, 255, 255 ), 1, 4, 0 );
 		}
 	}
@@ -961,9 +955,8 @@ bool refineCorners( Image& img, CornerList& corners, Image* pDebugImg )
 	{
 		// draw corners as circles
 		for ( unsigned i = 0; i < corners.size(); i++ )  {
-			IplImage dbgImg = pDebugImg->Mat();
-			cvCircle( &dbgImg, cvPoint( cvRound( corners[ i ][ 0 ] * 16 ), cvRound( corners[ i ][ 1 ] * 16 ) ),
-					  cvRound( 1.8f * 16 ), CV_RGB( i*80, 0, 0 ), -1, CV_AA, 4 );
+			cv::circle( pDebugImg->Mat(), cv::Point( cvRound( corners[ i ][ 0 ] * 16 ), cvRound( corners[ i ][ 1 ] * 16 ) ),
+					  cvRound( 1.8f * 16 ), cv::Scalar( i*80, 0, 0 ), -1, cv::LINE_AA, 4 );
 		}
 	}
 
@@ -999,8 +992,8 @@ boost::shared_ptr< Image > getMarkerImage( Image& img, const Math::Matrix< float
 	// apply homography
 	IplImage cvimg = img.Mat();
 	IplImage cvout = r->Mat();
-	cvWarpPerspective( &cvimg, &cvout, &cvH,
-		CV_INTER_LINEAR + CV_WARP_FILL_OUTLIERS + CV_WARP_INVERSE_MAP, cvScalar( 128 ) );
+	cv::warpPerspective( &cvimg, &cvout, &cvH,
+		cv::INTER_LINEAR + cv::WARP_FILL_OUTLIERS + cv::WARP_INVERSE_MAP, Scalar( 128 ) );
 
 	return r;
 	}
@@ -1283,23 +1276,23 @@ void drawCube( Vision::Image& img, const Math::Pose& pose, const Math::Matrix< f
 	// draw some lines
 	for ( int c = 0; c < 8; c += 4 )
 		for ( int i = 0; i < 4; i++ )
-			cvLine( &cvimg, cvPoint( cvRound( p2D[ c + i ][ 0 ] * 16 ), cvRound( p2D[ c + i ][ 1 ] * 16 ) ),
-				cvPoint( cvRound( p2D[ c + ( i + 1 ) % 4 ][ 0 ] * 16 ), cvRound( p2D[ c + ( i + 1 ) % 4 ][ 1 ] * 16 ) ),
-				color, 1, CV_AA, 4 );
+      cv::line( &cvimg, cv::Point( cvRound( p2D[ c + i ][ 0 ] * 16 ), cvRound( p2D[ c + i ][ 1 ] * 16 ) ),
+				cv::Point( cvRound( p2D[ c + ( i + 1 ) % 4 ][ 0 ] * 16 ), cvRound( p2D[ c + ( i + 1 ) % 4 ][ 1 ] * 16 ) ),
+				color, 1, cv::LINE_AA, 4 );
 	for ( int i = 0; i < 4; i++ )
-		cvLine( &cvimg, cvPoint( cvRound( p2D[ i ][ 0 ] * 16 ), cvRound( p2D[ i ][ 1 ] * 16 ) ),
-			cvPoint( cvRound( p2D[ i + 4 ][ 0 ] * 16 ), cvRound( p2D[ i + 4 ][ 1 ] * 16 ) ),
-			i == 0 ? CV_RGB( 0, 0, 0 ) : color, 1, CV_AA, 4 );
+		cv::line( &cvimg, cvPoint( cvRound( p2D[ i ][ 0 ] * 16 ), cvRound( p2D[ i ][ 1 ] * 16 ) ),
+			cv::Point( cvRound( p2D[ i + 4 ][ 0 ] * 16 ), cvRound( p2D[ i + 4 ][ 1 ] * 16 ) ),
+			i == 0 ? CV_RGB( 0, 0, 0 ) : color, 1, cv::LINE_AA, 4 );
 
 	if (error > -0.5) {
 		// draw line representing error value
 		CvScalar colorE = getGradientRampColor (error, 0.0, 100.0);
-		cvLine( &cvimg, cvPoint( cvRound( p2D[ 4 ][ 0 ] * 16 ), cvRound( p2D[ 4 ][ 1 ] * 16 ) ),
-			cvPoint( cvRound( p2D[ 6 ][ 0 ] * 16 ), cvRound( p2D[ 6 ][ 1 ] * 16 ) ),
-			colorE, 2, CV_AA, 4 );
-		cvLine( &cvimg, cvPoint( cvRound( p2D[ 5 ][ 0 ] * 16 ), cvRound( p2D[ 5 ][ 1 ] * 16 ) ),
-			cvPoint( cvRound( p2D[ 7 ][ 0 ] * 16 ), cvRound( p2D[ 7 ][ 1 ] * 16 ) ),
-			colorE, 2, CV_AA, 4 );
+    cv::line( &cvimg, cv::Point( cvRound( p2D[ 4 ][ 0 ] * 16 ), cvRound( p2D[ 4 ][ 1 ] * 16 ) ),
+			cv::Point( cvRound( p2D[ 6 ][ 0 ] * 16 ), cvRound( p2D[ 6 ][ 1 ] * 16 ) ),
+			colorE, 2, cv::LINE_AA, 4 );
+    cv::line( &cvimg, cvPoint( cvRound( p2D[ 5 ][ 0 ] * 16 ), cvRound( p2D[ 5 ][ 1 ] * 16 ) ),
+			cv::Point( cvRound( p2D[ 7 ][ 0 ] * 16 ), cvRound( p2D[ 7 ][ 1 ] * 16 ) ),
+			colorE, 2, cv::LINE_AA, 4 );
 	}
 
 }

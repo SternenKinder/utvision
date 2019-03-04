@@ -29,14 +29,12 @@
  * @author Daniel Pustka <daniel.pustka@in.tum.de>
  */
 
-#include <opencv/cv.h>
 #include <opencv2/opencv.hpp>
-#include <opencv2/imgcodecs/imgcodecs_c.h>
+
 #include <utUtil/Exception.h>
 #include "Image.h"
 #include <log4cpp/Category.hh>
 
-#include <opencv2/core/ocl.hpp>
 #include <utUtil/TracingProvider.h>
 
 // @todo add logging to image class ?
@@ -140,25 +138,6 @@ Image::Image( int nWidth, int nHeight, int nChannels, int nDepth, int nOrigin, I
 	} else {
 		LOG4CPP_ERROR( imageLogger, "Trying to allocate CPU and GPU buffer at the same time !!!");
 	}
-}
-
-
-Image::Image( IplImage* pIplImage, bool bDestroy )
-	: m_bOwned( bDestroy )
-	, m_uploadState(OnCPU)
-	, m_width(pIplImage->width)
-	, m_height(pIplImage->height)
-	, m_channels(pIplImage->nChannels)
-	, m_origin(pIplImage->origin)
-{
-	ImageFormatProperties fmt;
-	guessFormat(fmt, pIplImage);
-	m_format = fmt.imageFormat;
-	m_depth = fmt.depth;
-
-	m_cpuImage = cv::cvarrToMat(pIplImage);
-	if ( bDestroy )
-		cvReleaseImageHeader( &pIplImage );
 }
 
 Image::Image(cv::UMat & img)
@@ -452,12 +431,6 @@ void Image::guessFormat(ImageFormatProperties& result, cv::UMat m) {
 	guessFormat(result, m.channels(), m.depth(), m.type());
 }
 
-void Image::guessFormat(ImageFormatProperties& result, IplImage* m) {
-	// @todo can we extract the CvMat Type based on the information in IplImage??
-	guessFormat(result, m->nChannels, IPL2CV_DEPTH(m->depth));
-	// check m->channelSeq for RGB/BGR
-}
-
 void Image::getFormatProperties(ImageFormatProperties& result) const {
 	result.imageFormat = pixelFormat();
 	result.bitsPerPixel = bitsPerPixel();
@@ -511,20 +484,20 @@ Image::Ptr Image::CvtColor( int nCode, int nChannels, int nDepth ) const
 	getFormatProperties(fmt);
 
 	switch(nCode) {
-	case CV_BGR2GRAY:
-	case CV_RGB2GRAY:
-	case CV_BGRA2GRAY:
-	case CV_RGBA2GRAY:
+  case cv::COLOR_BGR2GRAY:
+	case cv::COLOR_RGB2GRAY:
+	case cv::COLOR_BGRA2GRAY:
+	case cv::COLOR_RGBA2GRAY:
 		fmt.imageFormat = LUMINANCE;
 		fmt.bitsPerPixel = fmt.bitsPerPixel / fmt.channels;
 		fmt.channels = 1;
 		break;
-	case CV_GRAY2RGB: // also matches GRAY2BGR
+	case cv::COLOR_GRAY2RGB: // also matches GRAY2BGR
 		fmt.imageFormat = RGB;
 		fmt.bitsPerPixel = fmt.bitsPerPixel * 3;
 		fmt.channels = 3;
 		break;
-	case CV_GRAY2RGBA: // also matches GRAY2BGRA
+	case cv::COLOR_GRAY2RGBA: // also matches GRAY2BGRA
 		fmt.imageFormat = RGBA;
 		fmt.bitsPerPixel = fmt.bitsPerPixel * 4;
 		fmt.channels = 4;
@@ -635,7 +608,7 @@ bool Image::isGrayscale() const
 Image::Ptr Image::getGrayscale( void ) const
 {
     if ( !isGrayscale() ) {
-        return CvtColor( CV_RGB2GRAY, 1, depth());
+        return CvtColor( cv::COLOR_RGB2GRAY, 1, depth());
     } else {
         return Clone();
     }
@@ -742,7 +715,7 @@ void Image::saveAsJpeg( const std::string filename, int compressionFactor ) cons
 {
     std::vector< int > params;
     compressionFactor = std::min( 100, std::max ( 0, compressionFactor ) );
-    params.push_back( CV_IMWRITE_JPEG_QUALITY );
+    params.push_back( cv::IMWRITE_JPEG_QUALITY );
     params.push_back( compressionFactor );
 	if (isOnGPU()) {
 		cv::imwrite( filename, m_gpuImage, params );
@@ -756,7 +729,7 @@ void Image::encodeAsJpeg( std::vector< uchar >& buffer, int compressionFactor ) 
 {
     std::vector< int > params;
     compressionFactor = std::min( 100, std::max ( 0, compressionFactor ) );
-    params.push_back( CV_IMWRITE_JPEG_QUALITY );
+    params.push_back( cv::IMWRITE_JPEG_QUALITY );
     params.push_back( compressionFactor );
 	if (isOnGPU()) {
 		cv::imencode( ".jpg", m_gpuImage, buffer, params );
@@ -774,7 +747,7 @@ void Image::checkOnGPU()
         // how about being more explicit by specifiying:
 		// cv::ACCESS_READ, cv::USAGE_ALLOCATE_DEVICE_MEMORY
 		// cv::ACCESS_WRITE, cv::USAGE_ALLOCATE_DEVICE_MEMORY
-		m_gpuImage = m_cpuImage.getUMat(0);
+		m_gpuImage = m_cpuImage.getUMat(cv::ACCESS_READ);
 		m_uploadState = OnCPUGPU;
 	}
 }
@@ -785,7 +758,7 @@ void Image::checkOnCPU()
 #ifdef ENABLE_EVENT_TRACING
 		TRACEPOINT_VISION_GPU_DOWNLOAD(width()*height()*channels())
 #endif
-		m_cpuImage = m_gpuImage.getMat(0);
+		m_cpuImage = m_gpuImage.getMat(cv::ACCESS_READ);
 		m_uploadState = OnCPUGPU;
 	}
 }

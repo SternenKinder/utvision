@@ -33,7 +33,7 @@
 #include <utUtil/CleanWindows.h>
 #endif
 
-#include <opencv/highgui.h>
+#include <opencv2/opencv.hpp>
 
 
 namespace Markers = Ubitrack::Vision::Markers;
@@ -72,7 +72,7 @@ int main( int, char** )
 			baInfo.imageToCam[ *itImage ] = camId;
 			
 			// load image
-			boost::shared_ptr< Vision::Image > pImage( new Vision::Image( cvLoadImage( itImage->c_str(), CV_LOAD_IMAGE_GRAYSCALE ) ) );
+			boost::shared_ptr< Vision::Image > pImage( new Vision::Image( imread( itImage->c_str(), cv::IMREAD_GRAYSCALE ) ) );
 
 			// undistort
 			pImage = undistorter.undistort( pImage );

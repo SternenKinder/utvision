@@ -42,6 +42,8 @@
 #include "Image.h"
 #include "PixelFlow.h"
 
+#include <opencv2/opencv.hpp>
+
 namespace Ubitrack { namespace Vision { namespace Markers {
 
 /** a list of corner points */
@@ -189,7 +191,7 @@ UTVISION_EXPORT void detectMarkers( Image& img, std::map< unsigned long long int
  * @param origin additional offset that is added to contour coordinates. Useful when using ROIs.
  * @return list of found markers in image
  */
-UTVISION_EXPORT MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset = cvPoint( 0, 0 ));
+UTVISION_EXPORT MarkerList findQuadrangles( Image& img, Image * pDbgImg, cv::Point offset = cv::Point( 0, 0 ));
 
 /**
  * @ingroup vision
@@ -281,7 +283,7 @@ UTVISION_EXPORT Math::Pose alternateMarkerPose( const Math::Pose& p );
  * @return number of detected points
  */
  
-UTVISION_EXPORT int refineLinePoints( CvPoint2D32f* pPoints, int* pStrengths, int nPoints, Image& greyImage,
+UTVISION_EXPORT int refineLinePoints( cv::Point2f* pPoints, int* pStrengths, int nPoints, Image& greyImage,
 	const Math::Vector< float, 2 >& point1, const Math::Vector< float, 2 >& point2, int nSearchPixels, 
 	Image* pDebugImg );
 

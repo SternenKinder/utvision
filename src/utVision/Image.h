@@ -38,7 +38,7 @@
 #include <boost/utility.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/binary_object.hpp>
-#include <opencv/cxcore.h>
+
 #include <utVision.h>
 #include <utMeasurement/Measurement.h>
 
@@ -229,15 +229,6 @@ public:
 		int nDepth = CV_8U, int nOrigin = 0, int nAlign = 4 );
 
 	/**
-	 * Create from pointer to IplImage. (DEPRECATED)
-	 *
-	 * @param pIplImage pointer to existing IplImage
-	 * @param bDestroy if true, the IplImage is destroyed (using cvReleaseImageHeader) and
-	 * ownership of the data is taken. Otherwise the data is not owned.
-	 */
-	explicit Image( IplImage* pIplImage, bool bDestroy = true );
-
-	/**
 	 * Create from Mat object
 	 */
 	explicit Image( cv::Mat & img );
@@ -385,7 +376,6 @@ public:
     static void guessFormat(ImageFormatProperties& result, int channels, int depth=-1, int matType=-1);
     static void guessFormat(ImageFormatProperties& result, cv::Mat m);
     static void guessFormat(ImageFormatProperties& result, cv::UMat m);
-    static void guessFormat(ImageFormatProperties& result, IplImage* m);
 
     /*
      * Get the ImageFormatProperties from the current image
@@ -502,7 +492,7 @@ private:
 		if (isOnCPU()) {
 			ar & boost::serialization::make_binary_object(m_cpuImage.data, m_cpuImage.total() * m_cpuImage.elemSize());
 		} else if (isOnGPU()) {
-			cv::Mat tmp = m_gpuImage.getMat(0);
+			cv::Mat tmp = m_gpuImage.getMat(cv::ACCESS_READ);
 			ar & boost::serialization::make_binary_object(tmp.data, tmp.total() * tmp.elemSize());
 		}
 	}
